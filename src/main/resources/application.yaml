@@ -1,0 +1,69 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: AmazingTeaching
+  profiles:
+    active: local  # 加载 application-local.yaml 中的密钥配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/amazing_teaching?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: root
+    password: "CHANGE_ME_IN_APPLICATION_LOCAL_YAML"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      max-lifetime: 1200000
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.cupk.amazingteaching.module.*.entity
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# JWT 配置
+jwt:
+  secret: CHANGE_ME_IN_APPLICATION_LOCAL_YAML
+  expiration: 86400000  # 24小时
+
+# Knife4j API文档配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+# AI 大模型配置
+# 支持所有 OpenAI 兼容格式的 API（通义千问、DeepSeek、Moonshot、OpenAI 等）
+ai:
+  api-url: https://api.deepseek.com/chat/completions
+  api-key: "CHANGE_ME_IN_APPLICATION_LOCAL_YAML"
+  model: deepseek-v4-flash
+  max-tokens: 2048
+  temperature: 0.7
+  system-prompt: 你是 AmazingTeaching 智能教学平台的 AI 助手，专注于帮助学生学习编程和技术知识。请用清晰、专业的方式回答问题，适当举例说明。
+
+# 日志配置
+logging:
+  level:
+    com.cupk.amazingteaching: debug
+    org.springframework.security: info
