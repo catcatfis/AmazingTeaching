@@ -32,7 +32,7 @@
       <el-col :span="6" v-for="c in recommendCourses" :key="c.id">
         <el-card shadow="hover">
           <p style="font-weight:bold">{{ c.courseName }}</p>
-          <p style="color:#909399;font-size:12px">{{ c.category }} | ⭐{{ c.rating }}</p>
+          <p style="color:#909399;font-size:14px">{{ c.category }} | ⭐{{ c.rating }}</p>
           <el-button size="small" type="primary" style="margin-top:8px" @click="handleEnroll(c.id)">选课</el-button>
         </el-card>
       </el-col>
@@ -54,6 +54,10 @@ const recommendCourses = ref([])
 onMounted(async () => { await fetchEnrollments(); const rec = await courseAPI.recommend({ studentId: studentId.value, limit: 4 }); recommendCourses.value = rec.data })
 
 const fetchEnrollments = async () => {
+  if (!studentId.value) {
+    ElMessage.error('输入ID为空，请重新输入ID')
+    return
+  }
   const res = await courseAPI.studentCourses(studentId.value)
   enrollments.value = res.data
 }

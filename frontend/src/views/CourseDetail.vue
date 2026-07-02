@@ -32,7 +32,7 @@
         <el-col :span="6" v-for="c in recommendCourses" :key="c.id">
           <el-card shadow="hover" @click="$router.push(`/course/${c.id}`)" style="cursor:pointer">
             <p style="font-weight:bold">{{ c.courseName }}</p>
-            <p style="color:#909399;font-size:12px">{{ c.category }} | ⭐{{ c.rating }}</p>
+            <p style="color:#909399;font-size:14px">{{ c.category }} | ⭐{{ c.rating }}</p>
           </el-card>
         </el-col>
       </el-row>

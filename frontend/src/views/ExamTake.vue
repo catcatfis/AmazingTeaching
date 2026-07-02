@@ -235,12 +235,12 @@ const handleSubmit = async () => {
 
 .correct-mark {
   color: #67C23A;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .wrong-mark {
   color: #F56C6C;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .score-result {

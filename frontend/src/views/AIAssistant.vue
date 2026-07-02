@@ -235,7 +235,7 @@ watch(activeTab, async (tab) => {
 .chat-msg.user .msg-content { background: #409EFF; color: #fff; }
 .chat-msg.ai .msg-content { background: #fff; border: 1px solid #e6e6e6; }
 .msg-content { max-width: 70%; padding: 10px 14px; border-radius: 12px; line-height: 1.6; white-space: pre-wrap; }
-.msg-time { font-size: 11px; color: #c0c4cc; margin-top: 4px; }
+.msg-time { font-size: 14px; color: #c0c4cc; margin-top: 4px; }
 .chat-input { display: flex; padding: 12px; background: #fff; border-top: 1px solid #e6e6e6; }
 .typing-cursor { display: inline-block; width: 2px; height: 1em; background: #409EFF; margin-left: 2px; vertical-align: text-bottom; animation: blink 0.8s infinite; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }

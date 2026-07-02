@@ -4,8 +4,8 @@
 
     <el-form :inline="true" :model="query">
       <el-form-item><el-input v-model="query.keyword" placeholder="课程名称" clearable /></el-form-item>
-      <el-form-item><el-select v-model="query.category" placeholder="分类" clearable><el-option label="编程开发" value="编程开发" /><el-option label="前端开发" value="前端开发" /><el-option label="数据科学" value="数据科学" /><el-option label="计算机基础" value="计算机基础" /><el-option label="数据库" value="数据库" /></el-select></el-form-item>
-      <el-form-item><el-select v-model="query.difficulty" placeholder="难度" clearable><el-option label="入门" :value="1" /><el-option label="初级" :value="2" /><el-option label="中级" :value="3" /><el-option label="高级" :value="4" /></el-select></el-form-item>
+      <el-form-item><el-select v-model="query.category" placeholder="请选择类型" clearable><el-option label="编程开发" value="编程开发" /><el-option label="前端开发" value="前端开发" /><el-option label="数据科学" value="数据科学" /><el-option label="计算机基础" value="计算机基础" /><el-option label="数据库" value="数据库" /></el-select></el-form-item>
+      <el-form-item><el-select v-model="query.difficulty" placeholder="请选择难度" clearable><el-option label="入门" :value="1" /><el-option label="初级" :value="2" /><el-option label="中级" :value="3" /><el-option label="高级" :value="4" /></el-select></el-form-item>
       <el-form-item><el-button type="primary" @click="fetchData">查询</el-button></el-form-item>
     </el-form>
 
@@ -78,7 +78,17 @@ const handlePublish = async (id) => {
 .card-header { display: flex; justify-content: space-between; align-items: center; }
 .course-header { display: flex; justify-content: space-between; align-items: center; }
 .course-name { font-weight: bold; font-size: 16px; }
-.course-desc { color: #909399; font-size: 13px; margin: 8px 0; }
-.course-footer { display: flex; gap: 16px; color: #606266; font-size: 13px; margin-bottom: 8px; }
+.course-desc { color: #909399; font-size: 14px; margin: 8px 0; }
+.course-footer { display: flex; gap: 16px; color: #606266; font-size: 14px; margin-bottom: 8px; }
 .course-actions { display: flex; gap: 8px; justify-content: flex-end; border-top: 1px solid #ebeef5; padding-top: 10px; }
+</style>
+
+<style>
+.el-select .el-input__inner::placeholder {
+  color: #c0c4cc;
+  font-size: 14px;
+}
+.el-select {
+  min-width: 120px;
+}
 </style>

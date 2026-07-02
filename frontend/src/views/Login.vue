@@ -153,5 +153,5 @@ const handleRegister = async () => {
 .login-title { text-align: center; font-size: 28px; color: #303133; margin-bottom: 8px; }
 .login-subtitle { text-align: center; color: #909399; margin-bottom: 30px; font-size: 14px; }
 .login-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
-.login-tip { color: #c0c4cc; font-size: 12px; }
+.login-tip { color: #c0c4cc; font-size: 14px; }
 </style>

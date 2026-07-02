@@ -8,7 +8,7 @@
           <el-tag size="small" :type="data.permType === 1 ? 'info' : data.permType === 2 ? 'success' : 'warning'" style="margin-left:8px">
             {{ ['未知', '菜单', '按钮', '接口'][data.permType] }}
           </el-tag>
-          <span style="color:#909399;margin-left:8px;font-size:12px">{{ data.permCode }}</span>
+          <span style="color:#909399;margin-left:8px;font-size:14px">{{ data.permCode }}</span>
         </span>
       </template>
     </el-tree>
