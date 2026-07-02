@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cupk.amazingteaching.common.annotation.LogOperation;
 import com.cupk.amazingteaching.common.result.R;
+import com.cupk.amazingteaching.module.course.entity.Course;
+import com.cupk.amazingteaching.module.course.mapper.CourseMapper;
 import com.cupk.amazingteaching.module.exam.entity.Exam;
 import com.cupk.amazingteaching.module.exam.entity.ExamRecord;
 import com.cupk.amazingteaching.module.exam.mapper.ExamMapper;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 考试管理控制器
@@ -29,6 +33,7 @@ public class ExamController {
 
     private final ExamMapper examMapper;
     private final ExamRecordMapper examRecordMapper;
+    private final CourseMapper courseMapper;
 
     @Operation(summary = "分页查询考试")
     @GetMapping("/page")
@@ -39,14 +44,64 @@ public class ExamController {
         LambdaQueryWrapper<Exam> wrapper = new LambdaQueryWrapper<Exam>()
                 .eq(courseId != null, Exam::getCourseId, courseId)
                 .orderByDesc(Exam::getCreateTime);
-        return R.ok(new Page<Exam>(page, size).setRecords(
-                examMapper.selectPage(new Page<>(page, size), wrapper).getRecords()));
+        Page<Exam> result = examMapper.selectPage(new Page<>(page, size), wrapper);
+        // 根据当前时间动态计算考试状态
+        LocalDateTime now = LocalDateTime.now();
+        // 填充课程名称
+        List<Long> courseIds = result.getRecords().stream()
+                .map(Exam::getCourseId)
+                .filter(id -> id != null)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, String> courseNameMap = new java.util.HashMap<>();
+        if (!courseIds.isEmpty()) {
+            List<Course> courses = courseMapper.selectBatchIds(courseIds);
+            courseNameMap = courses.stream()
+                    .collect(Collectors.toMap(Course::getId, Course::getCourseName));
+        }
+        for (Exam exam : result.getRecords()) {
+            exam.setStatus(calculateExamStatus(exam, now));
+            if (exam.getCourseId() != null) {
+                exam.setCourseName(courseNameMap.get(exam.getCourseId()));
+            }
+        }
+        return R.ok(result);
+    }
+
+    /**
+     * 根据当前时间动态计算考试状态
+     * @param exam 考试对象
+     * @param now 当前时间
+     * @return 状态：0-未开始，1-进行中，2-已结束
+     */
+    private Integer calculateExamStatus(Exam exam, LocalDateTime now) {
+        if (exam.getStartTime() == null || exam.getEndTime() == null) {
+            // 如果没有设置时间，使用数据库中的状态
+            return exam.getStatus();
+        }
+        if (now.isBefore(exam.getStartTime())) {
+            return 0; // 未开始
+        } else if (now.isAfter(exam.getEndTime())) {
+            return 2; // 已结束
+        } else {
+            return 1; // 进行中
+        }
     }
 
     @Operation(summary = "考试详情")
     @GetMapping("/{id}")
     public R<Exam> detail(@PathVariable Long id) {
-        return R.ok(examMapper.selectById(id));
+        Exam exam = examMapper.selectById(id);
+        if (exam != null) {
+            exam.setStatus(calculateExamStatus(exam, LocalDateTime.now()));
+            if (exam.getCourseId() != null) {
+                Course course = courseMapper.selectById(exam.getCourseId());
+                if (course != null) {
+                    exam.setCourseName(course.getCourseName());
+                }
+            }
+        }
+        return R.ok(exam);
     }
 
     @Operation(summary = "创建考试")
@@ -65,7 +120,7 @@ public class ExamController {
     public R<Exam> update(@PathVariable Long id, @RequestBody Exam exam) {
         exam.setId(id);
         examMapper.updateById(exam);
-        return R.ok("更新成功", exam);
+        return R.ok("更新成功", examMapper.selectById(id));
     }
 
     @Operation(summary = "删除考试")
@@ -82,14 +137,28 @@ public class ExamController {
     public R<ExamRecord> submit(@RequestBody ExamRecord record) {
         record.setSubmitTime(LocalDateTime.now());
         record.setStatus(2);
-        // 自动评分（简单评分逻辑：根据JSON答案计算）
+        
+        // 使用前端传来的分数（已由前端计算：答对题数 × 每题分值）
         Exam exam = examMapper.selectById(record.getExamId());
-        if (exam != null) {
-            // 模拟自动评分（实际项目中需要解析JSON并对答案）
-            record.setScore(new BigDecimal("85.0"));
+        if (exam != null && record.getScore() != null) {
             record.setIsPassed(record.getScore().compareTo(new BigDecimal(exam.getPassScore())) >= 0 ? 1 : 0);
         }
-        examRecordMapper.insert(record);
+        
+        // 检查是否已存在记录，存在则更新，不存在则插入
+        LambdaQueryWrapper<ExamRecord> wrapper = new LambdaQueryWrapper<ExamRecord>()
+                .eq(ExamRecord::getExamId, record.getExamId())
+                .eq(ExamRecord::getStudentId, record.getStudentId());
+        ExamRecord existing = examRecordMapper.selectOne(wrapper);
+        
+        if (existing != null) {
+            // 更新已有记录
+            record.setId(existing.getId());
+            examRecordMapper.updateById(record);
+        } else {
+            // 插入新记录
+            examRecordMapper.insert(record);
+        }
+        
         return R.ok("提交成功", record);
     }
 
@@ -102,6 +171,20 @@ public class ExamController {
                         .eq(studentId != null, ExamRecord::getStudentId, studentId)
                         .eq(examId != null, ExamRecord::getExamId, examId)
                         .orderByDesc(ExamRecord::getSubmitTime)));
+    }
+
+    @Operation(summary = "查询学生已提交的考试ID列表")
+    @GetMapping("/submitted")
+    public R<List<Long>> submittedExamIds(@RequestParam Long studentId) {
+        List<ExamRecord> records = examRecordMapper.selectList(
+                new LambdaQueryWrapper<ExamRecord>()
+                        .eq(ExamRecord::getStudentId, studentId)
+                        .select(ExamRecord::getExamId));
+        List<Long> examIds = records.stream()
+                .map(ExamRecord::getExamId)
+                .distinct()
+                .collect(java.util.stream.Collectors.toList());
+        return R.ok(examIds);
     }
 
     @Operation(summary = "获取考试统计数据")

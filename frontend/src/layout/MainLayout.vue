@@ -43,7 +43,7 @@
         <div class="header-right">
           <el-dropdown>
             <span class="user-info">
-              {{ userStore.userInfo?.realName || userStore.userInfo?.username || '用户' }}
+              {{ userStore.userInfo?.username || '用户' }}
               <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
@@ -77,9 +77,10 @@ const activeMenu = computed(() => route.path)
 const currentTitle = computed(() => route.meta?.title || '')
 
 const menuRoutes = computed(() => {
+  const userType = userStore.getUserType()
   return router.options.routes
     .find(r => r.path === '/')?.children
-    ?.filter(r => !r.meta?.hidden) || []
+    ?.filter(r => !r.meta?.hidden && r.meta?.roles?.includes(userType)) || []
 })
 
 const handleLogout = () => {

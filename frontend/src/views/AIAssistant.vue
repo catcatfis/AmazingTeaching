@@ -189,17 +189,37 @@ watch(activeTab, async (tab) => {
     if (chartInstance) { chartInstance.dispose(); chartInstance = null }
     const res = await aiAPI.knowledgeGraph(userStore.userInfo?.userId || 4)
     chartInstance = echarts.init(graphChart.value)
-    const nodes = res.data.nodes.map(n => ({ name: n.name, category: n.category === '后端' ? 0 : n.category === '数据库' ? 1 : 2, symbolSize: n.mastery / 3 }))
-    const edges = res.data.edges.map(e => ({ source: nodes[e.source - 1]?.name, target: nodes[e.target - 1]?.name }))
+    
+    // 节点分类映射：后端->0, 数据库->1, 前端->2, 计算机基础->3
+    const categoryMap = { '后端': 0, '数据库': 1, '前端': 2, '计算机基础': 3 }
+    const nodes = res.data.nodes.map(n => ({
+      name: n.name,
+      category: categoryMap[n.category] ?? 3,
+      symbolSize: 30 + (n.mastery - 60) / 40 * 40, // 30-70，差异更明显
+      value: n.mastery
+    }))
+    const edges = res.data.edges.map(e => ({
+      source: nodes[e.source - 1]?.name,
+      target: nodes[e.target - 1]?.name,
+      lineStyle: { curveness: 0.2 }
+    }))
     chartInstance.setOption({
-      tooltip: {},
-      legend: [{ data: ['后端', '数据库', '计算机基础'] }],
+      tooltip: { formatter: (p) => p.dataType === 'node' ? `${p.name}<br/>掌握度: ${p.data.value}%` : '' },
+      legend: [{ data: ['后端', '数据库', '前端', '计算机基础'] }],
       series: [{
         type: 'graph', layout: 'force', roam: true,
-        label: { show: true },
-        categories: [{ name: '后端' }, { name: '数据库' }, { name: '计算机基础' }],
+        label: { show: true, fontSize: 12 },
+        categories: [
+          { name: '后端' },
+          { name: '数据库' },
+          { name: '前端' },
+          { name: '计算机基础' }
+        ],
         data: nodes, edges: edges,
-        force: { repulsion: 200 }
+        force: { repulsion: 300, edgeLength: [120, 200] },
+        emphasis: { focus: 'adjacency' },
+        edgeSymbol: ['none', 'arrow'],
+        edgeSymbolSize: [0, 10]
       }]
     })
   }

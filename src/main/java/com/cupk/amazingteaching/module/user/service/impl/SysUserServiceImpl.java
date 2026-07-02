@@ -72,7 +72,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                         .like(SysUser::getRealName, keyword)
                         .or()
                         .like(SysUser::getPhone, keyword))
-                .orderByDesc(SysUser::getCreateTime);
+                .orderByAsc(SysUser::getId);
         return page(new Page<>(page, size), wrapper);
     }
 

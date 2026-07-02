@@ -6,6 +6,7 @@ import com.cupk.amazingteaching.common.annotation.LogOperation;
 import com.cupk.amazingteaching.common.result.R;
 import com.cupk.amazingteaching.module.course.entity.Course;
 import com.cupk.amazingteaching.module.course.entity.StudentCourse;
+import com.cupk.amazingteaching.module.course.mapper.CourseMapper;
 import com.cupk.amazingteaching.module.course.mapper.StudentCourseMapper;
 import com.cupk.amazingteaching.module.course.service.CourseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 课程管理控制器
@@ -28,6 +30,7 @@ public class CourseController {
 
     private final CourseService courseService;
     private final StudentCourseMapper studentCourseMapper;
+    private final CourseMapper courseMapper;
 
     @Operation(summary = "分页查询课程")
     @GetMapping("/page")
@@ -73,6 +76,14 @@ public class CourseController {
         return R.ok();
     }
 
+    @Operation(summary = "发布课程")
+    @PutMapping("/{id}/publish")
+    @LogOperation(module = "课程管理", operation = "UPDATE", description = "发布课程")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_TEACHER')")
+    public R<Course> publish(@PathVariable Long id) {
+        return R.ok("发布成功", courseService.publishCourse(id));
+    }
+
     @Operation(summary = "课程推荐（协同过滤算法）")
     @GetMapping("/recommend")
     public R<List<Course>> recommend(@RequestParam Long studentId,
@@ -108,8 +119,56 @@ public class CourseController {
     @Operation(summary = "查询学生选课列表")
     @GetMapping("/student-courses")
     public R<List<StudentCourse>> studentCourses(@RequestParam Long studentId) {
-        return R.ok(studentCourseMapper.selectList(
+        List<StudentCourse> studentCourses = studentCourseMapper.selectList(
                 new LambdaQueryWrapper<StudentCourse>()
-                        .eq(StudentCourse::getStudentId, studentId)));
+                        .eq(StudentCourse::getStudentId, studentId)
+                        .ne(StudentCourse::getStatus, 0)); // 排除已退课的记录
+        
+        // 获取所有相关的课程ID
+        List<Long> courseIds = studentCourses.stream()
+                .map(StudentCourse::getCourseId)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        if (!courseIds.isEmpty()) {
+            // 查询课程信息
+            List<Course> courses = courseMapper.selectBatchIds(courseIds);
+            Map<Long, String> courseNameMap = courses.stream()
+                    .collect(Collectors.toMap(Course::getId, Course::getCourseName));
+            
+            // 填充课程名称
+            studentCourses.forEach(sc -> sc.setCourseName(courseNameMap.get(sc.getCourseId())));
+        }
+        
+        return R.ok(studentCourses);
+    }
+
+    @Operation(summary = "学生退课")
+    @DeleteMapping("/unenroll")
+    @LogOperation(module = "课程管理", operation = "UNENROLL", description = "学生退课")
+    public R<Void> unenroll(@RequestParam Long studentId, @RequestParam Long courseId) {
+        StudentCourse sc = studentCourseMapper.selectOne(
+                new LambdaQueryWrapper<StudentCourse>()
+                        .eq(StudentCourse::getStudentId, studentId)
+                        .eq(StudentCourse::getCourseId, courseId));
+        if (sc == null) {
+            return R.error("未选该课程");
+        }
+        // 将状态设置为0（已退课）
+        sc.setStatus(0);
+        studentCourseMapper.updateById(sc);
+        return R.ok();
+    }
+
+    @Operation(summary = "获取教师自己的课程列表")
+    @GetMapping("/teacher-courses")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_TEACHER')")
+    public R<List<Course>> teacherCourses(@RequestParam Long teacherId) {
+        List<Course> courses = courseMapper.selectList(
+                new LambdaQueryWrapper<Course>()
+                        .eq(Course::getDeleted, 0)
+                        .eq(Course::getTeacherId, teacherId)
+                        .orderByDesc(Course::getCreateTime));
+        return R.ok(courses);
     }
 }

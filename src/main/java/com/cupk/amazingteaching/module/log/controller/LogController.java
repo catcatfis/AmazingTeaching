@@ -34,8 +34,7 @@ public class LogController {
                 .eq(module != null && !module.isEmpty(), SysLog::getModule, module)
                 .like(username != null && !username.isEmpty(), SysLog::getUsername, username)
                 .orderByDesc(SysLog::getCreateTime);
-        return R.ok(new Page<SysLog>(page, size).setRecords(
-                sysLogMapper.selectPage(new Page<>(page, size), wrapper).getRecords()));
+        return R.ok(sysLogMapper.selectPage(new Page<>(page, size), wrapper));
     }
 
     @Operation(summary = "查询日志详情")

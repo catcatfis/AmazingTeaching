@@ -3,7 +3,10 @@
     <template #header>
       <div class="card-header">
         <span>课程详情</span>
-        <el-button @click="$router.back()">返回</el-button>
+        <div>
+          <el-button v-if="course && course.status === 0" type="success" @click="handlePublish">发布课程</el-button>
+          <el-button @click="$router.back()">返回</el-button>
+        </div>
       </div>
     </template>
 
@@ -42,6 +45,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { courseAPI } from '@/api'
 import { useUserStore } from '@/stores/user'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -58,6 +62,14 @@ onMounted(async () => {
   recommendCourses.value = recRes.data.filter(c => c.id !== course.value.id)
   loading.value = false
 })
+
+const handlePublish = async () => {
+  await ElMessageBox.confirm('确认发布该课程？发布后将对学生可见', '发布确认', { type: 'success' })
+  await courseAPI.publish(course.value.id)
+  ElMessage.success('发布成功')
+  course.value.status = 1
+  course.value.publishTime = new Date().toISOString().replace('T', ' ').substring(0, 19)
+}
 </script>
 
 <style scoped>.card-header { display: flex; justify-content: space-between; align-items: center; }</style>

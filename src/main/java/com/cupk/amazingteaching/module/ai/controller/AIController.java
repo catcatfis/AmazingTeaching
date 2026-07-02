@@ -125,12 +125,14 @@ public class AIController {
         // 模拟知识图谱节点
         String[] topics = {"Java基础", "面向对象", "集合框架", "多线程", "Spring Boot",
                           "数据库", "前端基础", "数据结构", "算法设计", "设计模式"};
+        String[] categories = {"后端", "后端", "后端", "后端", "后端",
+                              "数据库", "前端", "计算机基础", "计算机基础", "计算机基础"};
         for (int i = 0; i < topics.length; i++) {
             Map<String, Object> node = new HashMap<>();
             node.put("id", i + 1);
             node.put("name", topics[i]);
             node.put("mastery", RANDOM.nextInt(40) + 60); // 掌握度 60-100
-            node.put("category", i < 5 ? "后端" : i < 7 ? "数据库" : "计算机基础");
+            node.put("category", categories[i]);
             nodes.add(node);
         }
 

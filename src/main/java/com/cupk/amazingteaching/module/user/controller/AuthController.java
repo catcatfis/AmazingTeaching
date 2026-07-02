@@ -31,7 +31,16 @@ public class AuthController {
     @Operation(summary = "用户注册")
     @PostMapping("/register")
     public R<SysUser> register(@RequestBody SysUser user) {
-        SysUser result = sysUserService.addUser(user, 3L); // 默认学生角色
+        // 安全检查：不允许注册管理员账户
+        if (user.getUserType() != null && user.getUserType() == 1) {
+            return R.error(400, "不允许注册管理员账户");
+        }
+        // 根据用户类型分配对应角色
+        Long roleId = 3L; // 默认学生角色
+        if (user.getUserType() != null && user.getUserType() == 2) {
+            roleId = 2L; // 教师角色
+        }
+        SysUser result = sysUserService.addUser(user, roleId);
         return R.ok("注册成功", result);
     }
 }

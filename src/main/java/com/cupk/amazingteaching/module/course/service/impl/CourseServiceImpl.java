@@ -174,4 +174,16 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         }
         return result;
     }
+
+    @Override
+    public Course publishCourse(Long id) {
+        Course course = getById(id);
+        if (course == null) {
+            throw new BusinessException("课程不存在");
+        }
+        course.setStatus(1);
+        course.setPublishTime(java.time.LocalDateTime.now());
+        updateById(course);
+        return course;
+    }
 }

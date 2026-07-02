@@ -28,6 +28,9 @@ export const useUserStore = defineStore('user', () => {
   }
 
   const isAdmin = () => userInfo.value?.userType === 1
+  const isTeacher = () => userInfo.value?.userType === 2
+  const isStudent = () => userInfo.value?.userType === 3
+  const getUserType = () => userInfo.value?.userType
 
-  return { token, userInfo, login, logout, isAdmin }
+  return { token, userInfo, login, logout, isAdmin, isTeacher, isStudent, getUserType }
 })

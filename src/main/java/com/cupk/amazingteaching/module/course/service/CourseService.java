@@ -32,4 +32,7 @@ public interface CourseService extends IService<Course> {
 
     /** 获取难度分布 */
     List<Map<String, Object>> getDifficultyStats();
+
+    /** 发布课程 */
+    Course publishCourse(Long id);
 }

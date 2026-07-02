@@ -1,6 +1,7 @@
 package com.cupk.amazingteaching.module.exam.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -31,7 +32,9 @@ public class Exam implements Serializable {
     private Integer duration;
     private Integer difficulty;
     private Integer status;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private LocalDateTime startTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private LocalDateTime endTime;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

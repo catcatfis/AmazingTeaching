@@ -75,10 +75,13 @@ export const courseAPI = {
   add: (data) => api.post('/course', data),
   update: (id, data) => api.put(`/course/${id}`, data),
   delete: (id) => api.delete(`/course/${id}`),
+  publish: (id) => api.put(`/course/${id}/publish`),
   recommend: (params) => api.get('/course/recommend', { params }),
   hot: (limit) => api.get('/course/hot', { params: { limit } }),
   enroll: (params) => api.post('/course/enroll', null, { params }),
-  studentCourses: (studentId) => api.get('/course/student-courses', { params: { studentId } })
+  unenroll: (params) => api.delete('/course/unenroll', { params }),
+  studentCourses: (studentId) => api.get('/course/student-courses', { params: { studentId } }),
+  teacherCourses: (teacherId) => api.get('/course/teacher-courses', { params: { teacherId } })
 }
 
 // ========== 章节 API ==========
@@ -99,6 +102,7 @@ export const examAPI = {
   delete: (id) => api.delete(`/exam/${id}`),
   submit: (data) => api.post('/exam/submit', data),
   records: (params) => api.get('/exam/records', { params }),
+  submittedExamIds: (studentId) => api.get('/exam/submitted', { params: { studentId } }),
   stats: () => api.get('/exam/stats')
 }
 

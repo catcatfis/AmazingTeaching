@@ -25,9 +25,11 @@
             <span>👨‍🎓 {{ course.studentCount }}人</span>
           </div>
           <div class="course-actions" @click.stop>
-            <el-button size="small" @click="$router.push(`/course-edit/${course.id}`)">编辑</el-button>
+            <el-button v-if="userStore.isAdmin() || course.teacherId === userStore.userInfo?.userId" size="small" @click="$router.push(`/course-edit/${course.id}`)">编辑</el-button>
             <el-button size="small" @click="$router.push(`/chapter/${course.id}`)">章节</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(course.id)">删除</el-button>
+            <el-button v-if="course.status === 0 && (userStore.isAdmin() || course.teacherId === userStore.userInfo?.userId)" size="small" type="success" @click="handlePublish(course.id)">发布</el-button>
+            <el-tag v-else-if="course.status === 1" size="small" type="success">已发布</el-tag>
+            <el-button v-if="userStore.isAdmin() || course.teacherId === userStore.userInfo?.userId" size="small" type="danger" @click="handleDelete(course.id)">删除</el-button>
           </div>
         </el-card>
       </el-col>
@@ -40,7 +42,10 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { courseAPI } from '@/api'
+import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
+
+const userStore = useUserStore()
 
 const tableData = ref([])
 const total = ref(0)
@@ -58,6 +63,13 @@ const handleDelete = async (id) => {
   await ElMessageBox.confirm('确认删除该课程？')
   await courseAPI.delete(id)
   ElMessage.success('删除成功')
+  fetchData()
+}
+
+const handlePublish = async (id) => {
+  await ElMessageBox.confirm('确认发布该课程？发布后将对学生可见', '发布确认', { type: 'success' })
+  await courseAPI.publish(id)
+  ElMessage.success('发布成功')
   fetchData()
 }
 </script>
