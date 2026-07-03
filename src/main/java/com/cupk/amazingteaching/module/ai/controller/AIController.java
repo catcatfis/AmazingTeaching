@@ -2,6 +2,10 @@ package com.cupk.amazingteaching.module.ai.controller;
 
 import com.cupk.amazingteaching.common.result.R;
 import com.cupk.amazingteaching.module.ai.service.AiService;
+import com.cupk.amazingteaching.module.course.entity.Course;
+import com.cupk.amazingteaching.module.course.entity.CoursePrerequisite;
+import com.cupk.amazingteaching.module.course.service.CoursePrerequisiteService;
+import com.cupk.amazingteaching.module.course.service.CourseService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * AI 智能辅助控制器
@@ -26,6 +31,8 @@ public class AIController {
 
     private final AiService aiService;
     private final ObjectMapper objectMapper;
+    private final CourseService courseService;
+    private final CoursePrerequisiteService coursePrerequisiteService;
     private static final Random RANDOM = new Random();
 
     @Operation(summary = "AI智能问答（同步）")
@@ -122,28 +129,39 @@ public class AIController {
         List<Map<String, Object>> nodes = new ArrayList<>();
         List<Map<String, Object>> edges = new ArrayList<>();
 
-        // 模拟知识图谱节点
-        String[] topics = {"Java基础", "面向对象", "集合框架", "多线程", "Spring Boot",
-                          "数据库", "前端基础", "数据结构", "算法设计", "设计模式"};
-        String[] categories = {"后端", "后端", "后端", "后端", "后端",
-                              "数据库", "前端", "计算机基础", "计算机基础", "计算机基础"};
-        for (int i = 0; i < topics.length; i++) {
+        // 1. 从数据库获取所有已发布的课程
+        List<Course> courses = courseService.listCourses(1, 100, null, null, null, 1).getRecords();
+        
+        // 2. 将课程转换为知识图谱节点
+        Map<Long, Course> courseMap = courses.stream()
+                .collect(Collectors.toMap(Course::getId, c -> c));
+        
+        for (Course course : courses) {
             Map<String, Object> node = new HashMap<>();
-            node.put("id", i + 1);
-            node.put("name", topics[i]);
+            node.put("id", course.getId());
+            node.put("name", course.getCourseName());
+            node.put("category", course.getCategory());
+            node.put("difficulty", course.getDifficulty());
+            // 根据学生选课情况计算掌握度（这里简化处理，实际应该查询student_course表）
             node.put("mastery", RANDOM.nextInt(40) + 60); // 掌握度 60-100
-            node.put("category", categories[i]);
             nodes.add(node);
         }
 
-        // 模拟知识关联
-        int[][] relations = {{1,2},{2,3},{3,4},{1,5},{5,6},{1,7},{7,8},{8,9},{9,10}};
-        for (int[] rel : relations) {
-            Map<String, Object> edge = new HashMap<>();
-            edge.put("source", rel[0]);
-            edge.put("target", rel[1]);
-            edge.put("relation", "前置知识");
-            edges.add(edge);
+        // 3. 从数据库获取课程先修关系
+        List<CoursePrerequisite> prerequisites = coursePrerequisiteService.getAllPrerequisites();
+        
+        for (CoursePrerequisite prerequisite : prerequisites) {
+            // 确保源和目标课程都在节点中
+            if (courseMap.containsKey(prerequisite.getCourseId()) && 
+                courseMap.containsKey(prerequisite.getPrerequisiteId())) {
+                Map<String, Object> edge = new HashMap<>();
+                edge.put("source", prerequisite.getPrerequisiteId());
+                edge.put("target", prerequisite.getCourseId());
+                edge.put("relation", prerequisite.getRelationType());
+                edge.put("description", prerequisite.getDescription());
+                edge.put("confidence", prerequisite.getConfidence());
+                edges.add(edge);
+            }
         }
 
         graph.put("nodes", nodes);

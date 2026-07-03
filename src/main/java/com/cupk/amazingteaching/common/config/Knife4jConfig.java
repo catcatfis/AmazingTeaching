@@ -16,11 +16,11 @@ public class Knife4jConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("AmazingTeaching 智能教学平台 API")
+                        .title("码上学 智能教学平台 API")
                         .version("1.0.0")
-                        .description("AmazingTeaching 智能教学平台接口文档")
+                        .description("码上学 智能教学平台接口文档")
                         .contact(new Contact()
-                                .name("AmazingTeaching Team")
+                                .name("码上学 Team")
                                 .email("support@amazingteaching.com")));
     }
 }

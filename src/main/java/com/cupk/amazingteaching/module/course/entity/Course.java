@@ -8,6 +8,7 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 课程表
@@ -42,4 +43,10 @@ public class Course implements Serializable {
 
     @TableField(exist = false)
     private String teacherName;  // 教师姓名（关联查询）
+    
+    @TableField(exist = false)
+    private List<CoursePrerequisite> prerequisites;  // 先修课程列表
+    
+    @TableField(exist = false)
+    private List<CoursePrerequisite> dependents;  // 依赖此课程的后续课程列表
 }

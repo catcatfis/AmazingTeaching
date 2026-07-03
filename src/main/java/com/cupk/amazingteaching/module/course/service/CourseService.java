@@ -13,7 +13,10 @@ import java.util.Map;
 public interface CourseService extends IService<Course> {
 
     /** 分页查询课程 */
-    Page<Course> pageCourses(int page, int size, String keyword, String category, Integer difficulty);
+    Page<Course> pageCourses(int page, int size, String keyword, String category, Integer difficulty, Integer status);
+    
+    /** 获取课程列表（用于知识图谱等场景） */
+    Page<Course> listCourses(int page, int size, String keyword, String category, Integer difficulty, Integer status);
 
     /** 获取课程详情（含教师信息） */
     Course getCourseDetail(Long id);

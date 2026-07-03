@@ -29,11 +29,36 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     private final SysUserMapper sysUserMapper;
 
     @Override
-    public Page<Course> pageCourses(int page, int size, String keyword, String category, Integer difficulty) {
+    public Page<Course> pageCourses(int page, int size, String keyword, String category, Integer difficulty, Integer status) {
         LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<Course>()
                 .eq(Course::getDeleted, 0)
                 .eq(category != null && !category.isEmpty(), Course::getCategory, category)
                 .eq(difficulty != null, Course::getDifficulty, difficulty)
+                .eq(status != null, Course::getStatus, status)
+                .and(keyword != null && !keyword.isEmpty(), w -> w
+                        .like(Course::getCourseName, keyword)
+                        .or()
+                        .like(Course::getDescription, keyword))
+                .orderByDesc(Course::getStudentCount);
+
+        Page<Course> result = page(new Page<>(page, size), wrapper);
+        // 填充教师姓名
+        for (Course course : result.getRecords()) {
+            if (course.getTeacherId() != null) {
+                SysUser teacher = sysUserMapper.selectById(course.getTeacherId());
+                course.setTeacherName(teacher != null ? teacher.getRealName() : "未知教师");
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Page<Course> listCourses(int page, int size, String keyword, String category, Integer difficulty, Integer status) {
+        LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<Course>()
+                .eq(Course::getDeleted, 0)
+                .eq(category != null && !category.isEmpty(), Course::getCategory, category)
+                .eq(difficulty != null, Course::getDifficulty, difficulty)
+                .eq(status != null, Course::getStatus, status)
                 .and(keyword != null && !keyword.isEmpty(), w -> w
                         .like(Course::getCourseName, keyword)
                         .or()

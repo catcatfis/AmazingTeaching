@@ -26,6 +26,9 @@ public class StudentCourse implements Serializable {
     private LocalDateTime finishTime;
     private Integer status;
     private BigDecimal score;
+    private Integer rating;         // 学生评分（1-5分）
+    private String ratingContent;   // 评分内容/评语
+    private LocalDateTime ratingTime; // 评分时间
 
     @TableField(exist = false)
     private String studentName;  // 学生姓名

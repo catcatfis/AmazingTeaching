@@ -73,7 +73,7 @@ import { useUserStore } from '@/stores/user'
 const userStore = useUserStore()
 const activeTab = ref('chat')
 const chatInput = ref('')
-const chatHistory = ref([{ role: 'ai', content: '你好！我是 AmazingTeaching AI 智能助手，有什么可以帮你的？', time: new Date().toLocaleTimeString() }])
+const chatHistory = ref([{ role: 'ai', content: '你好！我是码上学 AI 智能助手，有什么可以帮你的？', time: new Date().toLocaleTimeString() }])
 const chatMessages = ref(null)
 const advice = ref(null)
 const genTopic = ref('Java基础')
@@ -188,26 +188,95 @@ watch(activeTab, async (tab) => {
     // 先销毁旧实例，避免重复初始化警告
     if (chartInstance) { chartInstance.dispose(); chartInstance = null }
     const res = await aiAPI.knowledgeGraph(userStore.userInfo?.userId || 4)
+    console.log('知识图谱数据:', res.data)
+    console.log('节点数:', res.data.nodes?.length, '边数:', res.data.edges?.length)
+    console.log('边数据:', res.data.edges)
     chartInstance = echarts.init(graphChart.value)
     
     // 节点分类映射：后端->0, 数据库->1, 前端->2, 计算机基础->3
-    const categoryMap = { '后端': 0, '数据库': 1, '前端': 2, '计算机基础': 3 }
+    const categoryMap = {
+      '后端': 0, '编程开发': 0,  // 编程开发属于后端
+      '数据库': 1,
+      '前端': 2, '前端开发': 2,  // 前端开发属于前端
+      '计算机基础': 3, '数据科学': 3  // 数据科学属于计算机基础
+    }
     const nodes = res.data.nodes.map(n => ({
+      id: n.id,
       name: n.name,
       category: categoryMap[n.category] ?? 3,
       symbolSize: 30 + (n.mastery - 60) / 40 * 40, // 30-70，差异更明显
-      value: n.mastery
+      value: n.mastery,
+      itemStyle: { borderWidth: 2 }
     }))
-    const edges = res.data.edges.map(e => ({
-      source: nodes[e.source - 1]?.name,
-      target: nodes[e.target - 1]?.name,
-      lineStyle: { curveness: 0.2 }
+    
+    // 创建节点名称集合，用于检查有效性
+    const nodeNames = new Set(nodes.map(n => n.name))
+    // 创建节点ID到名称的映射
+    const nodeIdToName = {}
+    nodes.forEach(node => {
+      nodeIdToName[node.id] = node.name
+    })
+    console.log('节点名称集合:', nodeNames)
+    
+    const edges = res.data.edges.map(e => {
+      // ECharts graph图需要使用节点名称作为source和target
+      const sourceName = nodeIdToName[e.source]
+      const targetName = nodeIdToName[e.target]
+      console.log('边映射:', e.source, '->', sourceName, ',', e.target, '->', targetName)
+      return {
+      source: sourceName,
+      target: targetName,
+      lineStyle: { 
+        curveness: 0.3,
+        color: '#999',
+        width: 2
+      },
+      // 添加边的标签显示关系类型
+      label: {
+        show: true,
+        formatter: e.relation || '',
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        padding: [4, 8],
+        borderRadius: 6,
+        borderColor: '#ddd',
+        borderWidth: 1
+      }
+    }
+    }).filter(edge => {
+      // 过滤掉无效的边（source和target必须存在于节点名称集合中）
+      const valid = nodeNames.has(edge.source) && nodeNames.has(edge.target)
+      console.log('边检查:', edge.source, '->', edge.target, '有效:', valid)
+      return valid
+    })
+    console.log('最终边数:', edges.length, edges)
+    console.log('设置图表，节点数:', nodes.length, '边数:', edges.length)
+    
+    // 创建简化的节点数据（只保留 name 和 category）
+    const simpleNodes = nodes.map(n => ({
+      name: n.name,
+      category: n.category,
+      symbolSize: n.symbolSize
     }))
-    chartInstance.setOption({
-      tooltip: { formatter: (p) => p.dataType === 'node' ? `${p.name}<br/>掌握度: ${p.data.value}%` : '' },
+    console.log('简化节点数据:', simpleNodes)
+    
+    // 创建简化的边数据
+    const simpleLinks = edges.map(e => ({
+      source: e.source,
+      target: e.target
+    }))
+    console.log('简化边数据:', simpleLinks)
+    
+    const option = {
+      tooltip: {},
       legend: [{ data: ['后端', '数据库', '前端', '计算机基础'] }],
       series: [{
-        type: 'graph', layout: 'force', roam: true,
+        type: 'graph', 
+        layout: 'force', 
+        roam: true,
+        draggable: true,
         label: { show: true, fontSize: 12 },
         categories: [
           { name: '后端' },
@@ -215,13 +284,16 @@ watch(activeTab, async (tab) => {
           { name: '前端' },
           { name: '计算机基础' }
         ],
-        data: nodes, edges: edges,
-        force: { repulsion: 300, edgeLength: [120, 200] },
-        emphasis: { focus: 'adjacency' },
+        data: simpleNodes, 
+        links: simpleLinks,
+        force: { repulsion: 500, edgeLength: 150, gravity: 0.1 },
+        lineStyle: { color: '#ccc', width: 2, curveness: 0, opacity: 1 },
+        emphasis: { focus: 'adjacency', lineStyle: { width: 4 } },
         edgeSymbol: ['none', 'arrow'],
-        edgeSymbolSize: [0, 10]
+        edgeSymbolSize: [0, 12]
       }]
-    })
+    }
+    chartInstance.setOption(option, true)
   }
 })
 </script>

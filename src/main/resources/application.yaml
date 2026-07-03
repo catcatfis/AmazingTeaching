@@ -5,7 +5,7 @@ server:
 
 spring:
   application:
-    name: AmazingTeaching
+    name: 码上学
   profiles:
     active: local  # 加载 application-local.yaml 中的密钥配置
   datasource:
@@ -60,7 +60,7 @@ ai:
   model: deepseek-v4-flash
   max-tokens: 2048
   temperature: 0.7
-  system-prompt: 你是 AmazingTeaching 智能教学平台的 AI 助手，专注于帮助学生学习编程和技术知识。请用清晰、专业的方式回答问题，适当举例说明。
+  system-prompt: 你是码上学智能教学平台的 AI 助手，专注于帮助学生学习编程和技术知识。请用清晰、专业的方式回答问题，适当举例说明。
 
 # 日志配置
 logging:

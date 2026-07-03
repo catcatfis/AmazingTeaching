@@ -80,6 +80,7 @@ export const courseAPI = {
   hot: (limit) => api.get('/course/hot', { params: { limit } }),
   enroll: (params) => api.post('/course/enroll', null, { params }),
   unenroll: (params) => api.delete('/course/unenroll', { params }),
+  rate: (params) => api.post('/course/rate', null, { params }),
   studentCourses: (studentId) => api.get('/course/student-courses', { params: { studentId } }),
   teacherCourses: (teacherId) => api.get('/course/teacher-courses', { params: { teacherId } })
 }

@@ -2,7 +2,7 @@
   <el-container class="layout-container">
     <el-aside :width="isCollapse ? '64px' : '220px'" class="layout-aside">
       <div class="logo">
-        <span v-if="!isCollapse">📚 AmazingTeaching</span>
+        <span v-if="!isCollapse">📚 码上学</span>
         <span v-else>📚</span>
       </div>
       <el-menu

@@ -22,7 +22,7 @@
 
       <!-- 登录卡片 -->
       <div class="login-card">
-        <h1 class="login-title">AmazingTeaching</h1>
+        <h1 class="login-title">码上学</h1>
         <p class="login-subtitle">智能教学平台</p>
         <el-form :model="form" :rules="rules" ref="formRef" size="large">
           <el-form-item prop="username">

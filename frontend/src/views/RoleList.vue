@@ -27,7 +27,8 @@
     </el-dialog>
 
     <el-dialog title="分配权限" v-model="permDialogVisible" width="400px">
-      <el-tree :data="permTree" show-checkbox node-key="id" ref="permTreeRef" default-expand-all />
+      <el-tree :data="permTree" show-checkbox node-key="id" ref="permTreeRef" default-expand-all
+        :props="{ label: 'permName', children: 'children' }" />
       <template #footer><el-button @click="permDialogVisible = false">取消</el-button><el-button type="primary" @click="handleAssignPerms">确定</el-button></template>
     </el-dialog>
   </el-card>

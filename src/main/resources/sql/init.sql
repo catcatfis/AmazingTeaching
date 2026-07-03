@@ -1,5 +1,5 @@
 -- ============================================================
--- AmazingTeaching 教学平台数据库初始化脚本
+-- 码上学 教学平台数据库初始化脚本
 -- 10张表：核心业务表、权限表、日志表
 -- 满足第三范式(3NF)，一对一、一对多、多对多关系正确
 -- ============================================================
@@ -190,6 +190,9 @@ CREATE TABLE `student_course` (
     `finish_time`   DATETIME        DEFAULT NULL             COMMENT '完成时间',
     `status`        TINYINT(1)      NOT NULL DEFAULT 1       COMMENT '状态：0-已退课，1-学习中，2-已完成',
     `score`         DECIMAL(5,2)    DEFAULT NULL             COMMENT '课程成绩',
+    `rating`        TINYINT         DEFAULT NULL             COMMENT '学生评分（1-5分）',
+    `rating_content` VARCHAR(500)   DEFAULT NULL             COMMENT '评分内容/评语',
+    `rating_time`   DATETIME        DEFAULT NULL             COMMENT '评分时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_student_course` (`student_id`, `course_id`),
     KEY `idx_course_id` (`course_id`)
@@ -360,3 +363,37 @@ INSERT INTO `exam_record` (`exam_id`, `student_id`, `score`, `is_passed`, `start
 (1, 5, 72.00, 1, '2025-06-11 14:00:00', '2025-06-11 15:30:00', 2),
 (2, 5, 58.00, 0, '2025-06-20 10:00:00', '2025-06-20 12:00:00', 2),
 (3, 6, 91.00, 1, '2025-06-12 08:00:00', '2025-06-12 09:30:00', 2);
+
+-- ============================================================
+-- 12. course_prerequisite 课程先修关系表（多对多：course ↔ course）
+-- ============================================================
+DROP TABLE IF EXISTS `course_prerequisite`;
+CREATE TABLE `course_prerequisite` (
+    `id`              BIGINT          NOT NULL AUTO_INCREMENT  COMMENT '主键ID',
+    `course_id`       BIGINT          NOT NULL                 COMMENT '当前课程ID',
+    `prerequisite_id` BIGINT          NOT NULL                 COMMENT '先修课程ID',
+    `relation_type`   VARCHAR(20)     DEFAULT '前置知识'       COMMENT '关系类型：前置知识、依赖关系、应用场景、扩展关系',
+    `description`     VARCHAR(200)    DEFAULT NULL             COMMENT '关系描述',
+    `confidence`      DECIMAL(3,2)    DEFAULT 1.00             COMMENT '置信度（0-1）',
+    `source`          VARCHAR(20)     DEFAULT 'manual'         COMMENT '来源：manual-手动，ai-自动生成',
+    `create_time`     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_course_prerequisite` (`course_id`, `prerequisite_id`),
+    KEY `idx_prerequisite_id` (`prerequisite_id`),
+    KEY `idx_relation_type` (`relation_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='课程先修关系表';
+
+-- 课程先修关系示例数据
+INSERT INTO `course_prerequisite` (`course_id`, `prerequisite_id`, `relation_type`, `description`, `confidence`, `source`) VALUES
+-- Java从入门到精通 的先修课程：无
+-- Spring Boot 3.x 实战 的先修课程：Java从入门到精通
+(2, 1, '前置知识', '学习Spring Boot需要掌握Java基础', 0.95, 'ai'),
+-- Vue3 + Element Plus 前端开发 的先修课程：无
+-- 数据结构与算法精讲 的先修课程：无
+-- Python数据分析实战 的先修课程：Java从入门到精通（可选）
+(5, 1, '依赖关系', '数据分析需要编程基础，Java是推荐语言之一', 0.70, 'ai'),
+-- MySQL数据库深度解析 的先修课程：Java从入门到精通、Spring Boot 3.x 实战
+(6, 1, '前置知识', '数据库开发需要编程基础', 0.85, 'ai'),
+(6, 2, '前置知识', 'Spring Boot中常用数据库操作，需要先掌握MySQL', 0.90, 'ai');
+
+

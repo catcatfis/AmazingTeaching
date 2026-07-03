@@ -12,8 +12,8 @@
     <groupId>com.cupk</groupId>
     <artifactId>AmazingTeaching</artifactId>
     <version>1.0.0</version>
-    <name>AmazingTeaching</name>
-    <description>AmazingTeaching - 智能教学平台</description>
+    <name>码上学</name>
+    <description>码上学 - 智能教学平台</description>
 
     <properties>
         <java.version>17</java.version>
